@@ -198,6 +198,8 @@ var WMEWAL;
     let layerCheckboxAdded = false;
     let WALMap;
     let errList = [];
+    // Make viewport unlimited
+    document.head.appendChild((() => {let style = document.createElement("style");style.innerText = '#editor-container #WazeMap { max-height: none !important; max-width: none !important; height: 100% !important; width: 100% !important}';return style})());
     function onWmeReady() {
         initCount++;
         if (WazeWrap && WazeWrap.Ready) {
