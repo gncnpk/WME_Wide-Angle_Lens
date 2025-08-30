@@ -412,7 +412,6 @@ var WMEWAL;
         tabScan.append("<div><b>Output to: </b><select class='form-control' id='_wmewalScanOutputTo'><option value='csv'>CSV File</option><option value='tab'>Browser Tab</option>" +
             "<option value='both'>Both CSV File and Browser Tab</option><option value='scan'>Continuous Scan</option></select></div>");
         tabScan.append("<div><input type='checkbox' id='_wmewalAddBOM'><label for='_wmewalAddBOM' class='wal-label'>Add Byte Order Mark to CSV</label></div><hr/>");
-        //tabScan.append("<div><input type='checkbox' id='_wmewalContinuousScan'><label for='_wmewalContinuousScan' class='wal-label'>Continuous scan</label></div><hr/>");
         tabScan.append("<div><b>Active Plug-Ins</b><div id='_wmewalPlugins'></div>");
         tabScan.append("<div><b>Scan</b><div id='_wmewalOptionsSavedAreas' name='_wmewalSavedAreas'/></div>");
         tabScan.append("<hr/>");
