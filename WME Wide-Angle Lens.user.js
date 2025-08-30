@@ -463,7 +463,6 @@ var WMEWAL;
         updateSavedAreasList();
         $("#_wmewalScanOutputTo").on("change", updateSettings);
         $('#_wmewalAddBOM').on('change', updateSettings);
-        //$('#_wmewalContinuousScan').on('change', updateSettings);
         $("#_wmewalAddNewArea").on("click", addNewArea);
         $("#_wmewalCancel").on("click", cancelScan);
         $("#_wmewalScan").on("click", scanArea);
