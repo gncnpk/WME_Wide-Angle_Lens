@@ -757,7 +757,7 @@ var WMEWAL;
                 document.getElementById('_wmewalAddBOM').parentElement.style = "";
             }
             WMEWAL.addBOM = $('#_wmewalAddBOM').prop('checked');
-            WMEWAL.continuousScan = WMEWAL.outputTo === 4; //$('#_wmewalContinuousScan').prop('checked');
+            WMEWAL.continuousScan = WMEWAL.outputTo === 4;
             // Get optional fields to include in output
             WMEWAL.outputFields = $('#_wmewalOutputFields option:selected').map(function () { return $(this).attr('value'); }).get();
             const newSettings = {
