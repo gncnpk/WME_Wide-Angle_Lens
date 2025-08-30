@@ -459,7 +459,6 @@ var WMEWAL;
         WMEWAL.outputTo = parseOutputTo(settings.OutputTo || "csv");
         $('#_wmewalAddBOM').prop('checked', settings.AddBOM);
         WMEWAL.addBOM = settings.AddBOM;
-        //$('#_wmewalContinuousScan').prop('checked', settings.continuousScan);
         WMEWAL.continuousScan = settings.continuousScan;
         updateSavedAreasList();
         $("#_wmewalScanOutputTo").on("change", updateSettings);
