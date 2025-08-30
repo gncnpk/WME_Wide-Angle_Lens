@@ -14,13 +14,13 @@
 // @exclude             https://*.waze.com/user/editor*
 // @exclude             https://www.waze.com/discuss/*
 // @grant               GM_xmlhttpRequest
-// @version             2025.07.07.001
+// @version             2025.08.29.001
 // @copyright           2020 vtpearce
 // @license             CC BY-SA 4.0
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
-// @updateURL           https://greasyfork.org/scripts/40641-wme-wide-angle-lens/code/WME%20Wide-Angle%20Lens.meta.js
-// @downloadURL         https://greasyfork.org/scripts/40641-wme-wide-angle-lens/code/WME%20Wide-Angle%20Lens.user.js
 // @connect             greasyfork.org
+// @downloadURL https://update.greasyfork.org/scripts/40641/WME%20Wide-Angle%20Lens.user.js
+// @updateURL https://update.greasyfork.org/scripts/40641/WME%20Wide-Angle%20Lens.meta.js
 // ==/UserScript==
 // @updateURL           https://greasyfork.org/scripts/418291-wme-wide-angle-lens-beta/code/WME%20Wide-Angle%20Lens.meta.js
 // @downloadURL         https://greasyfork.org/scripts/418291-wme-wide-angle-lens-beta/code/WME%20Wide-Angle%20Lens.user.js
@@ -30,8 +30,8 @@ var WMEWAL;
     const SCRIPT_VERSION = GM_info.script.version.toString();
     const DOWNLOAD_URL = GM_info.script.downloadURL;
     const updateText = '<ul>'
-        + '<li>Add support for road closure layer.</li>'
-        + '<li>Fix check/uncheck of layers.</li>'
+        + '<li>Add option to continuously scan.</li>'
+        + '<li>Make CSV-specific checkbox show only when CSV is selected.</li>'
         + '</ul>';
     const greasyForkPage = 'https://greasyfork.org/scripts/40641';
     const wazeForumThread = 'https://www.waze.com/discuss/t/script-wme-wide-angle-lens/77807';
@@ -159,6 +159,7 @@ var WMEWAL;
     (function (OutputTo) {
         OutputTo[OutputTo["CSV"] = 1] = "CSV";
         OutputTo[OutputTo["Tab"] = 2] = "Tab";
+        OutputTo[OutputTo["Scan"] = 4] = "Scan";
     })(OutputTo = WMEWAL.OutputTo || (WMEWAL.OutputTo = {}));
     let ScanStatus;
     (function (ScanStatus) {
@@ -198,8 +199,6 @@ var WMEWAL;
     let layerCheckboxAdded = false;
     let WALMap;
     let errList = [];
-    // Make viewport unlimited
-    document.head.appendChild((() => {let style = document.createElement("style");style.innerText = '#editor-container #WazeMap { max-height: none !important; max-width: none !important; height: 100% !important; width: 100% !important}';return style})());
     function onWmeReady() {
         initCount++;
         if (WazeWrap && WazeWrap.Ready) {
@@ -268,6 +267,7 @@ var WMEWAL;
                         log("warning", "Unable to decompress! Using empty settings");
                         WMEWAL.outputTo = OutputTo.CSV;
                         WMEWAL.addBOM = false;
+                        WMEWAL.continuousScan = false;
                         settings = {
                             SavedAreas: [],
                             ActivePlugins: [],
@@ -275,6 +275,7 @@ var WMEWAL;
                             Version: SCRIPT_VERSION,
                             showLayer: false,
                             AddBOM: WMEWAL.addBOM,
+                            continuousScan: WMEWAL.continuousScan,
                             OutputFields: defaultOutputFields
                         };
                     }
@@ -285,6 +286,9 @@ var WMEWAL;
                 delete this.settingsString;
                 if (!Object.prototype.hasOwnProperty.call(settings, 'AddBOM')) {
                     settings.AddBOM = false;
+                }
+                if (!Object.prototype.hasOwnProperty.call(settings, 'continuousScan')) {
+                    settings.continuousScan = false;
                 }
                 if (!Object.prototype.hasOwnProperty.call(settings, 'Version')) {
                     settings.Version = SCRIPT_VERSION;
@@ -315,6 +319,7 @@ var WMEWAL;
                 });
                 WMEWAL.outputTo = OutputTo.CSV;
                 WMEWAL.addBOM = false;
+                WMEWAL.continuousScan = false;
                 settings = {
                     SavedAreas: savedAreas,
                     ActivePlugins: [],
@@ -322,6 +327,7 @@ var WMEWAL;
                     Version: SCRIPT_VERSION,
                     showLayer: false,
                     AddBOM: WMEWAL.addBOM,
+                    continuousScan: WMEWAL.continuousScan,
                     OutputFields: defaultOutputFields
                 };
                 for (let ix = 0; ix < settings.SavedAreas.length; ix++) {
@@ -334,6 +340,7 @@ var WMEWAL;
             else {
                 WMEWAL.outputTo = OutputTo.CSV;
                 WMEWAL.addBOM = false;
+                WMEWAL.continuousScan = false;
                 settings = {
                     SavedAreas: [],
                     ActivePlugins: [],
@@ -341,6 +348,7 @@ var WMEWAL;
                     Version: SCRIPT_VERSION,
                     showLayer: false,
                     AddBOM: false,
+                    continuousScan: false,
                     OutputFields: defaultOutputFields
                 };
             }
@@ -402,8 +410,9 @@ var WMEWAL;
         const addonTabContent = $("<div class='tab-content'/>").appendTo(tab);
         const tabScan = $("<div class='tab-pane active' id='sidepanel-wmewal-scan'/>").appendTo(addonTabContent);
         tabScan.append("<div><b>Output to: </b><select class='form-control' id='_wmewalScanOutputTo'><option value='csv'>CSV File</option><option value='tab'>Browser Tab</option>" +
-            "<option value='both'>Both CSV File and Browser Tab</option></select></div>");
+            "<option value='both'>Both CSV File and Browser Tab</option><option value='scan'>Continuous Scan</option></select></div>");
         tabScan.append("<div><input type='checkbox' id='_wmewalAddBOM'><label for='_wmewalAddBOM' class='wal-label'>Add Byte Order Mark to CSV</label></div><hr/>");
+        //tabScan.append("<div><input type='checkbox' id='_wmewalContinuousScan'><label for='_wmewalContinuousScan' class='wal-label'>Continuous scan</label></div><hr/>");
         tabScan.append("<div><b>Active Plug-Ins</b><div id='_wmewalPlugins'></div>");
         tabScan.append("<div><b>Scan</b><div id='_wmewalOptionsSavedAreas' name='_wmewalSavedAreas'/></div>");
         tabScan.append("<hr/>");
@@ -451,9 +460,12 @@ var WMEWAL;
         WMEWAL.outputTo = parseOutputTo(settings.OutputTo || "csv");
         $('#_wmewalAddBOM').prop('checked', settings.AddBOM);
         WMEWAL.addBOM = settings.AddBOM;
+        //$('#_wmewalContinuousScan').prop('checked', settings.continuousScan);
+        WMEWAL.continuousScan = settings.continuousScan;
         updateSavedAreasList();
         $("#_wmewalScanOutputTo").on("change", updateSettings);
         $('#_wmewalAddBOM').on('change', updateSettings);
+        //$('#_wmewalContinuousScan').on('change', updateSettings);
         $("#_wmewalAddNewArea").on("click", addNewArea);
         $("#_wmewalCancel").on("click", cancelScan);
         $("#_wmewalScan").on("click", scanArea);
@@ -741,7 +753,14 @@ var WMEWAL;
     function updateSettings() {
         if (typeof Storage !== "undefined") {
             WMEWAL.outputTo = parseOutputTo($("#_wmewalScanOutputTo").val());
+            if (WMEWAL.outputTo !== 1 && WMEWAL.outputTo !== 3) {
+                document.getElementById('_wmewalAddBOM').parentElement.style = "display: none";
+            }
+            else {
+                document.getElementById('_wmewalAddBOM').parentElement.style = "";
+            }
             WMEWAL.addBOM = $('#_wmewalAddBOM').prop('checked');
+            WMEWAL.continuousScan = WMEWAL.outputTo === 4; //$('#_wmewalContinuousScan').prop('checked');
             // Get optional fields to include in output
             WMEWAL.outputFields = $('#_wmewalOutputFields option:selected').map(function () { return $(this).attr('value'); }).get();
             const newSettings = {
@@ -751,6 +770,7 @@ var WMEWAL;
                 Version: settings.Version,
                 showLayer: settings.showLayer,
                 AddBOM: WMEWAL.addBOM,
+                continuousScan: WMEWAL.continuousScan,
                 OutputFields: WMEWAL.outputFields
             };
             for (let ix = 0; ix < settings.SavedAreas.length; ix++) {
@@ -1358,7 +1378,17 @@ var WMEWAL;
                     currentLon = topLeft.x;
                     currentLat -= height;
                     if (currentLat < bottomRight.y - height) {
-                        done = true;
+                        // Continuous scan (if enabled, set currentLat = topLeft.y)
+                        if (WMEWAL.continuousScan)
+                        {
+                            log("INFO", "Restarting scan");
+                            countViewports = 1;
+                            currentLat = topLeft.y;
+                        }
+                        else
+                        {
+                            done = true;
+                        }
                     }
                 }
                 if (!done) {
@@ -1610,6 +1640,9 @@ var WMEWAL;
                 break;
             case "both":
                 ot = OutputTo.CSV | OutputTo.Tab;
+                break;
+            case "scan":
+                ot = OutputTo.Scan;
                 break;
             default:
                 break;
