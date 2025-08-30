@@ -1378,7 +1378,6 @@ var WMEWAL;
                         // Continuous scan (if enabled, set currentLat = topLeft.y)
                         if (WMEWAL.continuousScan)
                         {
-                            log("INFO", "Restarting scan");
                             countViewports = 1;
                             currentLat = topLeft.y;
                         }
